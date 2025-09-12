@@ -1,3 +1,4 @@
+import Registration from "./Reg-Login/Registration.tsx";
 
 function App() {
 
@@ -6,7 +7,7 @@ function App() {
     <>
      <div>
 
-       <h1>HELLO</h1>
+       <Registration />
 
      </div>
     </>
