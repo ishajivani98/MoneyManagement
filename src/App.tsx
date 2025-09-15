@@ -4,6 +4,8 @@ import Login from "./Reg-Login/Login";
 import Dashboard from "./Dashborad/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import Records from "./Dashborad/Records"; // import records
+// (later add Analysis, Budgets, Accounts, etc.)
 
 function App() {
   return (
@@ -26,7 +28,7 @@ function App() {
         }
       />
 
-      {/* Protected route */}
+      {/* Protected route with nested children */}
       <Route
         path="/dashboard"
         element={
@@ -34,7 +36,12 @@ function App() {
             <Dashboard />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="records" element={<Records />} />
+        {/* <Route path="analysis" element={<Analysis />} /> */}
+        {/* <Route path="budgets" element={<Budgets />} /> */}
+        {/* <Route path="accounts" element={<Accounts />} /> */}
+      </Route>
     </Routes>
   );
 }

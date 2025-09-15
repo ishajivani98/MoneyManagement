@@ -106,8 +106,7 @@ function Registration() {
                 ----------------------or---------------------
               </div>
 
-              <button
-                className="w-full text-white bg-gray-800 hover:bg-gray-600 border focus:ring-1 rounded-lg text-sm px-5 py-2.5 text-center">
+              <button className="w-full text-white bg-gray-800 hover:bg-gray-600 border focus:ring-1 rounded-lg text-sm px-5 py-2.5 text-center">
                 Continue With Google
               </button>
 
