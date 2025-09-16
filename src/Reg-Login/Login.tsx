@@ -81,6 +81,17 @@ function Login() {
               >
                 Login
               </button>
+
+              <p className="text-sm font-light text-gray-500 dark:text-gray-400 text-center">
+                create a  account?{" "}
+                <a
+                  className="font-medium text-green-600 hover:underline dark:text-green-400"
+                  href="/"
+                >
+                  Sign up here
+                </a>
+              </p>
+
             </form>
           </div>
         </div>

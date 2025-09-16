@@ -60,15 +60,11 @@ function Header() {
         </NavLink>
 
         <NavLink to="/login" className="text-white hover:text-green-500">
-
-
             <button onClick={handleLogout}>
-
               <Logout style={{ fontSize: "30px" }} />
               <div className="text-[11px]">
                 Logout</div>
             </button>
-
         </NavLink>
       </nav>
     </aside>

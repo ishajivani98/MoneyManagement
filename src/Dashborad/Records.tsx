@@ -5,14 +5,31 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
 function Records() {
   const months = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
   ];
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // For Calculator
+  // Calculator
   const [calcValue, setCalcValue] = useState("0");
+
+  // Record fields
+  const [transactionType, setTransactionType] = useState("Income");
+  const [account, setAccount] = useState("💳 Account");
+  const [category, setCategory] = useState("🏷 Category");
+  const [notes, setNotes] = useState("");
+
+  // All saved records
+  const [records, setRecords] = useState<{
+    amount: string;
+    type: string;
+    account: string;
+    category: string;
+    notes: string;
+    date: string;
+    month: number;
+  }[]>([]);
 
   const prevMonth = () => setCurrentMonth((prev) => (prev - 1 + 12) % 12);
   const nextMonth = () => setCurrentMonth((prev) => (prev + 1) % 12);
@@ -29,9 +46,31 @@ function Records() {
       setCalcValue("0");
     } else {
       setCalcValue((prev) =>
-        prev === "0" ? val : prev + val
+        prev === "0" || prev === "Error" ? val : prev + val
       );
     }
+  };
+
+  const handleSave = () => {
+    const newRecord = {
+      amount: calcValue,
+      type: transactionType,
+      account,
+      category,
+      notes,
+      date: new Date().toLocaleDateString(),
+      month: currentMonth,
+    };
+
+    setRecords((prev) => [...prev, newRecord]);
+
+    // Reset form
+    setCalcValue("0");
+    setNotes("");
+    setTransactionType("Income");
+    setAccount("💳 Account");
+    setCategory("🏷 Category");
+    setIsModalOpen(false);
   };
 
   return (
@@ -58,6 +97,31 @@ function Records() {
           </div>
         </div>
 
+        {/* Records List */}
+        <div className="space-y-4 text-white">
+          {records.filter((r) => r.month === currentMonth).length === 0 ? (
+            <div className="text-center text-gray-400">No records for {months[currentMonth]}</div>
+          ) : (
+            records
+              .filter((r) => r.month === currentMonth)
+              .map((record, idx) => (
+                <div
+                  key={idx}
+                  className="bg-[#002b00] p-4 rounded-lg flex justify-between items-center"
+                >
+                  <div>
+                    <div className="font-semibold">{record.type}</div>
+                    <div className="text-sm text-gray-400">{record.notes || "No notes"}</div>
+                    <div className="text-xs text-gray-500">{record.date}</div>
+                  </div>
+                  <div className="text-lg font-bold">
+                    {record.type === "Expense" ? "-" : "+"}${record.amount}
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
+
         {/* Add Button */}
         <div className="flex justify-end mt-10">
           <button
@@ -82,27 +146,41 @@ function Records() {
               >
                 ✕ Cancel
               </button>
-              <button className="text-green-800 font-semibold">
+              <button onClick={handleSave} className="text-green-800 font-semibold">
                 ✓ Save
               </button>
             </div>
 
             {/* Tabs */}
             <div className="flex justify-center space-x-6 mb-6">
-              <button className="text-gray-400 hover:text-green-800 border-b-2 border-green-900 pb-1">Income</button>
-              <button className=" text-gray-400 hover:text-green-800 border-b-2 border-green-900 pb-1">
-                Expense
-              </button>
-              <button className="text-gray-400 hover:text-green-800 border-b-2 border-green-900 pb-1 ">Transfer</button>
+              {["Income", "Expense", "Transfer"].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setTransactionType(type)}
+                  className={`pb-1 border-b-2 ${
+                    transactionType === type
+                      ? "text-green-800 border-green-800"
+                      : "text-gray-400 border-green-900"
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
             </div>
 
             {/* Account & Category */}
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <button className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center">
-                💳 Account
+              <button
+                className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center"
+                onClick={() => setAccount("💳 Account")}
+              >
+                {account}
               </button>
-              <button className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center">
-                🏷 Category
+              <button
+                className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center"
+                onClick={() => setCategory("🏷 Category")}
+              >
+                {category}
               </button>
             </div>
 
@@ -110,6 +188,8 @@ function Records() {
             <textarea
               placeholder="Add notes"
               className="w-full bg-[#2b2b2b] p-3 rounded-lg text-sm text-gray-300 mb-4"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
             />
 
             {/* Calculator */}
