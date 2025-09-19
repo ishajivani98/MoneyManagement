@@ -11,7 +11,6 @@ function LandingPage() {
         <h1 className="text-2xl font-bold">Expensify</h1>
         <button className="px-5 py-2 rounded-full bg-white text-[#022c22] font-semibold">
           <a
-
             href="/login"
           >
             Sign in
