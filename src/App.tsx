@@ -4,7 +4,9 @@ import Login from "./Reg-Login/Login";
 import Dashboard from "./Dashborad/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
-import Records from "./Dashborad/Records"; // import records
+import Records from "./Dashborad/Records";
+import Analysis from "./Dashborad/Analysis"; // import records
+
 // (later add Analysis, Budgets, Accounts, etc.)
 
 function App() {
@@ -38,7 +40,7 @@ function App() {
         }
       >
         <Route path="records" element={<Records />} />
-        {/* <Route path="analysis" element={<Analysis />} /> */}
+         <Route path="analysis" element={<Analysis />} />
         {/* <Route path="budgets" element={<Budgets />} /> */}
         {/* <Route path="accounts" element={<Accounts />} /> */}
       </Route>

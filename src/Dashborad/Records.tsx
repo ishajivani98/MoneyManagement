@@ -11,16 +11,13 @@ function Records() {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Calculator
   const [calcValue, setCalcValue] = useState("0");
 
-  // Record fields
   const [transactionType, setTransactionType] = useState("Income");
   const [account, setAccount] = useState("💳 Account");
   const [category, setCategory] = useState("🏷 Category");
   const [notes, setNotes] = useState("");
 
-  // All saved records
   const [records, setRecords] = useState<{
     amount: string;
     type: string;
@@ -37,7 +34,6 @@ function Records() {
   const handleCalcClick = (val: string) => {
     if (val === "=") {
       try {
-        // eslint-disable-next-line no-eval
         setCalcValue(eval(calcValue.replace("×", "*").replace("÷", "/")).toString());
       } catch {
         setCalcValue("Error");
@@ -97,10 +93,53 @@ function Records() {
           </div>
         </div>
 
+        {/* Totals - Horizontal View */}
+        <div className="bg-[#002b00] rounded-lg p-6 mb-6 text-white">
+          {(() => {
+            const monthRecords = records.filter((r) => r.month === currentMonth);
+            const income = monthRecords
+              .filter((r) => r.type === "Income")
+              .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+            const expense = monthRecords
+              .filter((r) => r.type === "Expense")
+              .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+            const net = income - expense;
+
+            return (
+              <div className="flex justify-between text-center space-x-4">
+                <div className="flex-1 border-r border-green-900">
+                  <div className="text-sm text-gray-400">Income</div>
+                  <div className="text-green-400 font-bold text-xl">
+                    +${income.toFixed(2)}
+                  </div>
+                </div>
+                <div className="flex-1 border-r border-green-900">
+                  <div className="text-sm text-gray-400">Expense</div>
+                  <div className="text-red-400 font-bold text-xl">
+                    -${expense.toFixed(2)}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm text-gray-400">Net Total</div>
+                  <div
+                    className={`font-bold text-xl ${
+                      net >= 0 ? "text-green-400" : "text-red-400"
+                    }`}
+                  >
+                    {net >= 0 ? "+" : "-"}${Math.abs(net).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* Records List */}
         <div className="space-y-4 text-white">
           {records.filter((r) => r.month === currentMonth).length === 0 ? (
-            <div className="text-center text-gray-400">No records for {months[currentMonth]}</div>
+            <div className="text-center text-gray-400">
+              No records for {months[currentMonth]}
+            </div>
           ) : (
             records
               .filter((r) => r.month === currentMonth)
@@ -111,7 +150,9 @@ function Records() {
                 >
                   <div>
                     <div className="font-semibold">{record.type}</div>
-                    <div className="text-sm text-gray-400">{record.notes || "No notes"}</div>
+                    <div className="text-sm text-gray-400">
+                      {record.notes || "No notes"}
+                    </div>
                     <div className="text-xs text-gray-500">{record.date}</div>
                   </div>
                   <div className="text-lg font-bold">
@@ -137,8 +178,7 @@ function Records() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-[#1a1a1a] rounded-xl shadow-lg p-6 w-[420px] text-gray-200 relative">
-
-            {/* Header with Cancel and Save */}
+            {/* Header */}
             <div className="flex justify-between items-center mb-4">
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -146,14 +186,17 @@ function Records() {
               >
                 ✕ Cancel
               </button>
-              <button onClick={handleSave} className="text-green-800 font-semibold">
+              <button
+                onClick={handleSave}
+                className="text-green-800 font-semibold"
+              >
                 ✓ Save
               </button>
             </div>
 
             {/* Tabs */}
             <div className="flex justify-center space-x-6 mb-6">
-              {["Income", "Expense", "Transfer"].map((type) => (
+              {["Income", "Expense"].map((type) => (
                 <button
                   key={type}
                   onClick={() => setTransactionType(type)}
