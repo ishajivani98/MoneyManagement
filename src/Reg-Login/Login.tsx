@@ -86,7 +86,7 @@ function Login() {
                 create a  account?{" "}
                 <a
                   className="font-medium text-green-600 hover:underline dark:text-green-400"
-                  href="/"
+                  href="/Reg"
                 >
                   Sign up here
                 </a>

@@ -1,16 +1,40 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import { useOutletContext } from "react-router-dom";
+
+type RecordType = {
+  amount: string;
+  type: string;
+  account: string;
+  category: string;
+  notes: string;
+  date: string;
+  month: number;
+};
+
+type ContextType = {
+  records: RecordType[];
+  setRecords: React.Dispatch<React.SetStateAction<RecordType[]>>;
+  currentMonth: number;
+  setCurrentMonth: React.Dispatch<React.SetStateAction<number>>;
+};
 
 function Records() {
+  const {
+    records,
+    setRecords,
+    currentMonth,
+    setCurrentMonth,
+  } = useOutletContext<ContextType>();
+
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [calcValue, setCalcValue] = useState("0");
 
   const [transactionType, setTransactionType] = useState("Income");
@@ -18,23 +42,15 @@ function Records() {
   const [category, setCategory] = useState("🏷 Category");
   const [notes, setNotes] = useState("");
 
-  const [records, setRecords] = useState<{
-    amount: string;
-    type: string;
-    account: string;
-    category: string;
-    notes: string;
-    date: string;
-    month: number;
-  }[]>([]);
-
   const prevMonth = () => setCurrentMonth((prev) => (prev - 1 + 12) % 12);
   const nextMonth = () => setCurrentMonth((prev) => (prev + 1) % 12);
 
   const handleCalcClick = (val: string) => {
     if (val === "=") {
       try {
-        setCalcValue(eval(calcValue.replace("×", "*").replace("÷", "/")).toString());
+        // Replace × and ÷ with * and / for eval calculation
+        // eslint-disable-next-line no-eval
+        setCalcValue(eval(calcValue.replace(/×/g, "*").replace(/÷/g, "/")).toString());
       } catch {
         setCalcValue("Error");
       }
@@ -48,7 +64,9 @@ function Records() {
   };
 
   const handleSave = () => {
-    const newRecord = {
+    if (calcValue === "Error" || calcValue === "0") return; // prevent saving invalid or zero amounts
+
+    const newRecord: RecordType = {
       amount: calcValue,
       type: transactionType,
       account,
@@ -70,180 +88,198 @@ function Records() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#001a00] relative">
-      <main className="flex-1 p-8">
-        <h1 className="text-2xl text-white font-semibold mb-6">💰 Records</h1>
+    <>
+      <div className="min-h-screen w-full bg-[#001a00] relative">
+        <main className="flex-1 p-8">
+          <h1 className="text-2xl text-white font-semibold mb-6">💰 Records</h1>
 
-        {/* Month Changer */}
-        <div className="bg-[#002b00] rounded-lg p-6 mb-6">
-          <div className="flex items-center justify-center text-white space-x-4">
+          {/* Month Changer */}
+          <div className="bg-[#002b00] rounded-lg p-6 mb-6">
+            <div className="flex items-center justify-center text-white space-x-4">
+              <button
+                onClick={prevMonth}
+                className="p-2 hover:bg-green-900 rounded-full transition"
+              >
+                <ArrowBackIosNewIcon fontSize="small" />
+              </button>
+              <div className="text-lg font-bold">{months[currentMonth]}</div>
+              <button
+                onClick={nextMonth}
+                className="p-2 hover:bg-green-900 rounded-full transition"
+              >
+                <ArrowForwardIosIcon fontSize="small" />
+              </button>
+            </div>
+          </div>
+
+          {/* Totals - Horizontal View */}
+          <div className="bg-[#002b00] rounded-lg p-6 mb-6 text-white">
+            {(() => {
+              const monthRecords = records.filter((r) => r.month === currentMonth);
+              const income = monthRecords
+                .filter((r) => r.type === "Income")
+                .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+              const expense = monthRecords
+                .filter((r) => r.type === "Expense")
+                .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+              const net = income - expense;
+
+              return (
+                <div className="flex justify-between text-center space-x-4">
+                  <div className="flex-1 border-r border-green-900">
+                    <div className="text-sm text-gray-400">Income</div>
+                    <div className="text-green-400 font-bold text-xl">
+                      +${income.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="flex-1 border-r border-green-900">
+                    <div className="text-sm text-gray-400">Expense</div>
+                    <div className="text-red-400 font-bold text-xl">
+                      -${expense.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400">Net Total</div>
+                    <div
+                      className={`font-bold text-xl ${
+                        net >= 0 ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {net >= 0 ? "+" : "-"}${Math.abs(net).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Records List */}
+          <div className="space-y-4 text-white">
+            {records.filter((r) => r.month === currentMonth).length === 0 ? (
+              <div className="text-center text-gray-400">
+                No records for {months[currentMonth]}
+              </div>
+            ) : (
+              records
+                .filter((r) => r.month === currentMonth)
+                .map((record, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-[#002b00] p-4 rounded-lg flex justify-between items-center"
+                  >
+                    <div>
+                      <div className="font-semibold">{record.type}</div>
+                      <div className="text-sm text-gray-400">
+                        {record.notes || "No notes"}
+                      </div>
+                      <div className="text-xs text-gray-500">{record.date}</div>
+                    </div>
+                    <div className="text-lg font-bold">
+                      {record.type === "Expense" ? "-" : "+"}${record.amount}
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+
+          {/* Add Button */}
+          <div className="flex justify-end mt-10">
             <button
-              onClick={prevMonth}
-              className="p-2 hover:bg-green-900 rounded-full transition"
+              onClick={() => setIsModalOpen(true)}
+              className="bg-green-800 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition"
             >
-              <ArrowBackIosNewIcon fontSize="small" />
-            </button>
-            <div className="text-lg font-bold">{months[currentMonth]}</div>
-            <button
-              onClick={nextMonth}
-              className="p-2 hover:bg-green-900 rounded-full transition"
-            >
-              <ArrowForwardIosIcon fontSize="small" />
+              <AddIcon style={{ fontSize: "32px" }} />
             </button>
           </div>
-        </div>
+        </main>
 
-        {/* Totals - Horizontal View */}
-        <div className="bg-[#002b00] rounded-lg p-6 mb-6 text-white">
-          {(() => {
-            const monthRecords = records.filter((r) => r.month === currentMonth);
-            const income = monthRecords
-              .filter((r) => r.type === "Income")
-              .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
-            const expense = monthRecords
-              .filter((r) => r.type === "Expense")
-              .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
-            const net = income - expense;
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-[#1a1a1a] rounded-xl shadow-lg p-6 w-[420px] text-gray-200 relative">
+              {/* Header */}
+              <div className="flex justify-between items-center mb-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-green-800 font-semibold"
+                >
+                  ✕ Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="text-green-800 font-semibold"
+                >
+                  ✓ Save
+                </button>
+              </div>
 
-            return (
-              <div className="flex justify-between text-center space-x-4">
-                <div className="flex-1 border-r border-green-900">
-                  <div className="text-sm text-gray-400">Income</div>
-                  <div className="text-green-400 font-bold text-xl">
-                    +${income.toFixed(2)}
-                  </div>
-                </div>
-                <div className="flex-1 border-r border-green-900">
-                  <div className="text-sm text-gray-400">Expense</div>
-                  <div className="text-red-400 font-bold text-xl">
-                    -${expense.toFixed(2)}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm text-gray-400">Net Total</div>
-                  <div
-                    className={`font-bold text-xl ${
-                      net >= 0 ? "text-green-400" : "text-red-400"
+              {/* Tabs */}
+              <div className="flex justify-center space-x-6 mb-6">
+                {["Income", "Expense"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setTransactionType(type)}
+                    className={`pb-1 border-b-2 ${
+                      transactionType === type
+                        ? "text-green-800 border-green-800"
+                        : "text-gray-400 border-green-900"
                     }`}
                   >
-                    {net >= 0 ? "+" : "-"}${Math.abs(net).toFixed(2)}
-                  </div>
-                </div>
+                    {type}
+                  </button>
+                ))}
               </div>
-            );
-          })()}
-        </div>
 
-        {/* Records List */}
-        <div className="space-y-4 text-white">
-          {records.filter((r) => r.month === currentMonth).length === 0 ? (
-            <div className="text-center text-gray-400">
-              No records for {months[currentMonth]}
-            </div>
-          ) : (
-            records
-              .filter((r) => r.month === currentMonth)
-              .map((record, idx) => (
-                <div
-                  key={idx}
-                  className="bg-[#002b00] p-4 rounded-lg flex justify-between items-center"
-                >
-                  <div>
-                    <div className="font-semibold">{record.type}</div>
-                    <div className="text-sm text-gray-400">
-                      {record.notes || "No notes"}
-                    </div>
-                    <div className="text-xs text-gray-500">{record.date}</div>
-                  </div>
-                  <div className="text-lg font-bold">
-                    {record.type === "Expense" ? "-" : "+"}${record.amount}
-                  </div>
-                </div>
-              ))
-          )}
-        </div>
-
-        {/* Add Button */}
-        <div className="flex justify-end mt-10">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-green-800 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition"
-          >
-            <AddIcon style={{ fontSize: "32px" }} />
-          </button>
-        </div>
-      </main>
-
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1a1a1a] rounded-xl shadow-lg p-6 w-[420px] text-gray-200 relative">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-green-800 font-semibold"
-              >
-                ✕ Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="text-green-800 font-semibold"
-              >
-                ✓ Save
-              </button>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex justify-center space-x-6 mb-6">
-              {["Income", "Expense"].map((type) => (
+              {/* Account & Category */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
                 <button
-                  key={type}
-                  onClick={() => setTransactionType(type)}
-                  className={`pb-1 border-b-2 ${
-                    transactionType === type
-                      ? "text-green-800 border-green-800"
-                      : "text-gray-400 border-green-900"
-                  }`}
+                  className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center"
+                  onClick={() => setAccount("💳 Account")}
                 >
-                  {type}
+                  {account}
                 </button>
-              ))}
-            </div>
-
-            {/* Account & Category */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <button
-                className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center"
-                onClick={() => setAccount("💳 Account")}
-              >
-                {account}
-              </button>
-              <button
-                className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center"
-                onClick={() => setCategory("🏷 Category")}
-              >
-                {category}
-              </button>
-            </div>
-
-            {/* Notes */}
-            <textarea
-              placeholder="Add notes"
-              className="w-full bg-[#2b2b2b] p-3 rounded-lg text-sm text-gray-300 mb-4"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-
-            {/* Calculator */}
-            <div className="bg-[#2b2b2b] p-4 rounded-lg mb-4">
-              <div className="flex justify-between items-center text-3xl mb-3">
-                <span></span>
-                <span>{calcValue}</span>
+                <button
+                  className="bg-[#2b2b2b] p-3 rounded-lg flex items-center justify-center"
+                  onClick={() => setCategory("🏷 Category")}
+                >
+                  {category}
+                </button>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {["C", "9", "7", "8", "+", "6", "4", "5", "-", "3", "1", "2", "×", "÷", "0", ".", "="].map(
-                  (key) => (
+
+              {/* Notes */}
+              <textarea
+                placeholder="Add notes"
+                className="w-full bg-[#2b2b2b] p-3 rounded-lg text-sm text-gray-300 mb-4"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+
+              {/* Calculator */}
+              <div className="bg-[#2b2b2b] p-4 rounded-lg mb-4">
+                <div className="flex justify-between items-center text-3xl mb-3">
+                  <span></span>
+                  <span>{calcValue}</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    "C",
+                    "9",
+                    "7",
+                    "8",
+                    "+",
+                    "6",
+                    "4",
+                    "5",
+                    "-",
+                    "3",
+                    "1",
+                    "2",
+                    "×",
+                    "÷",
+                    "0",
+                    ".",
+                    "=",
+                  ].map((key) => (
                     <button
                       key={key}
                       onClick={() => handleCalcClick(key)}
@@ -251,20 +287,25 @@ function Records() {
                     >
                       {key}
                     </button>
-                  )
-                )}
+                  ))}
+                </div>
+              </div>
+
+              {/* Date & Time */}
+              <div className="flex justify-between text-sm text-gray-400">
+                <span>{new Date().toLocaleDateString()}</span>
+                <span>
+                  {new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
               </div>
             </div>
-
-            {/* Date & Time */}
-            <div className="flex justify-between text-sm text-gray-400">
-              <span>{new Date().toLocaleDateString()}</span>
-              <span>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
 

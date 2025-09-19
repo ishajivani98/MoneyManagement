@@ -5,9 +5,8 @@ import Dashboard from "./Dashborad/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 import Records from "./Dashborad/Records";
-import Analysis from "./Dashborad/Analysis"; // import records
-
-// (later add Analysis, Budgets, Accounts, etc.)
+import Analysis from "./Dashborad/Analysis";
+import LandingPage from "./LandingPage";
 
 function App() {
   return (
@@ -17,7 +16,7 @@ function App() {
         path="/"
         element={
           <PublicRoute>
-            <Registration />
+            <LandingPage />
           </PublicRoute>
         }
       />
@@ -29,7 +28,14 @@ function App() {
           </PublicRoute>
         }
       />
-
+      <Route
+        path="/Reg"
+        element={
+          <PublicRoute>
+            <Registration />
+          </PublicRoute>
+        }
+      />
       {/* Protected route with nested children */}
       <Route
         path="/dashboard"
@@ -40,7 +46,8 @@ function App() {
         }
       >
         <Route path="records" element={<Records />} />
-         <Route path="analysis" element={<Analysis />} />
+        <Route path="analysis" element={<Analysis />} />
+        {/* Future routes */}
         {/* <Route path="budgets" element={<Budgets />} /> */}
         {/* <Route path="accounts" element={<Accounts />} /> */}
       </Route>
